@@ -170,6 +170,7 @@ def main(cfg):
 
     ax[0, cfg.features + 1].imshow(Z_classification_target, aspect="auto", cmap=cm.coolwarm, extent=xlim + ylim, alpha=1)
     ax[0, cfg.features + 1].set_title("classification\ntarget")
+    ax[0, cfg.features + 1].set_xlabel("x")
 
     node_values = get_node_values(graph, pos, means, covs)
     node_values -= mean_Z
