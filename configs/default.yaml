@@ -3,6 +3,7 @@ random_seed:
   networkx: 896803
 
 features: 3
+
 # specify default configurations for each of the subfolders
 defaults:
   - gaussians: low_frequency
