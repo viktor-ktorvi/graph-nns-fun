@@ -1,0 +1,7 @@
+resolution: 100
+xlim:
+  - -1
+  - 1
+ylim:
+  - -1
+  - 1
