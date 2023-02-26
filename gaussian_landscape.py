@@ -103,6 +103,13 @@ def get_node_values(graph, pos, means, covs):
     return np.array(node_values)
 
 
+def generate_graph(num_nodes, radius, threshold, seed):
+    graph = nx.thresholded_random_geometric_graph(num_nodes, radius, theta=threshold, seed=seed)
+    pos = translate_positions(graph)  # positions from [0, 1] to [-1, 1]
+
+    return graph, pos
+
+
 @hydra.main(version_base=None, config_path="configs", config_name="default")
 def main(cfg):
     np.random.seed(cfg.random_seed.numpy)
@@ -112,8 +119,7 @@ def main(cfg):
     ylim = cfg.plotting.ylim
 
     # random geometric graph
-    graph = nx.random_geometric_graph(cfg.topology.nodes, cfg.topology.radius, seed=cfg.random_seed.networkx)
-    pos = translate_positions(graph)  # positions from [0, 1] to [-1, 1]
+    graph, pos = generate_graph(cfg.topology.nodes, cfg.topology.radius, cfg.topology.threshold, cfg.random_seed.networkx)
     pos_for_plotting = flip_y_axis(pos)  # nx.draw flips the y-axis, so we have to flip it back
 
     # meshgrid for all future plots
