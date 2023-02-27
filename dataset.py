@@ -9,9 +9,10 @@ from torch_geometric.data import Data, InMemoryDataset
 from tqdm import tqdm
 from typing import Union, List, Tuple
 
+from matplotlib import cm
 from matplotlib import pyplot as plt
 
-from gaussian_landscape import flip_y_axis, get_node_values, generate_graph, generate_statistics
+from gaussian_landscape import feature_target_plot, flip_y_axis, get_node_values, generate_graph, generate_statistics
 
 
 class GaussianLandscapeDataset(InMemoryDataset):
@@ -22,13 +23,18 @@ class GaussianLandscapeDataset(InMemoryDataset):
         self.data_samples = []
         self.graph, self.pos_dict = generate_graph(cfg.topology.nodes, cfg.topology.radius, cfg.topology.threshold, cfg.random_seed.networkx)
 
+        self.feature_means = []
+        self.feature_covs = []
         x = []
         for i in range(cfg.dataset.features):
             feature_means, feature_covs = generate_statistics(cfg.gaussians)
+            self.feature_means.append(feature_means)
+            self.feature_covs.append(feature_covs)
+
             x.append(get_node_values(self.graph, self.pos_dict, feature_means, feature_covs))
 
-        target_means, target_covs = generate_statistics(cfg.gaussians)
-        y = torch.tensor(get_node_values(self.graph, self.pos_dict, target_means, target_covs))
+        self.target_means, self.target_covs = generate_statistics(cfg.gaussians)
+        y = torch.tensor(get_node_values(self.graph, self.pos_dict, self.target_means, self.target_covs))
 
         self.data_basis = Data(
             x=torch.tensor(np.array(x)).T,
@@ -57,8 +63,14 @@ class GaussianLandscapeDataset(InMemoryDataset):
     def download(self):
         pass
 
-    def draw(self, **kwargs):
+    def draw_graph(self, **kwargs):
         nx.draw(self.graph, flip_y_axis(self.pos_dict), **kwargs)
+
+    def draw_basis(self, **kwargs):
+        feature_target_plot(self.graph, self.pos,
+                            self.feature_means, self.feature_covs,
+                            self.target_means, self.target_covs,
+                            **kwargs)
 
     def get(self, idx: int) -> Data:
         assert idx < self.len(), "Index(={:d}) is higher then the length of the dataset(={:d})".format(idx, self.len())
@@ -100,7 +112,11 @@ def main(cfg):
     dataset = GaussianLandscapeDataset(cfg)
 
     plt.figure()
-    dataset.draw()
+    dataset.draw_graph()
+
+    dataset.draw_basis(cmap_features=cm.viridis, cmap_targets=cm.coolwarm,
+                       resolution=cfg.plotting.resolution,
+                       xlim=cfg.plotting.xlim, ylim=cfg.plotting.ylim)
     plt.show()
 
 
