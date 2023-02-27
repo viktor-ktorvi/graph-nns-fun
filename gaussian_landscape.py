@@ -110,6 +110,91 @@ def generate_graph(num_nodes, radius, threshold, seed):
     return graph, pos
 
 
+def feature_target_plot(
+        graph, pos,
+        feature_means, feature_covs,
+        target_means, target_covs,
+        cmap_features=cm.viridis, cmap_targets=cm.coolwarm,
+        resolution=100,
+        xlim=(-1, 1), ylim=(-1, 1)
+):
+    num_features = len(feature_means)
+    pos_for_plotting = flip_y_axis(pos)  # nx.draw flips the y-axis, so we have to flip it back
+
+    # meshgrid for all future plots
+    X, Y = np.meshgrid(np.linspace(xlim[0], xlim[1], resolution),
+                       np.linspace(ylim[0], ylim[1], resolution))
+
+    # plot features, targets and graphs
+    fig, ax = plt.subplots(2, num_features + 2, sharey="row")
+    fig.suptitle("Features and targets")
+
+    ax[0, 0].set_ylabel("y")  # align y axis
+    ax[0, 0].set_ylim(ylim)
+
+    # features
+    for i in range(num_features):
+        # feature maps
+        feature_landscape = get_landscape_value(X, Y, feature_means[i], feature_covs[i])
+        ax[0, i].imshow(feature_landscape, cmap=cmap_features, aspect="auto", extent=xlim + ylim, alpha=1)
+        ax[0, i].set_title("# {:d}".format(i))
+        ax[0, i].set_xlabel("x")
+
+        # graph with feature map values
+        nx.draw(
+            graph, pos_for_plotting,
+            node_color=get_node_values(graph, pos, feature_means[i], feature_covs[i]),
+            cmap=cmap_features,
+            vmin=np.min(feature_landscape),
+            vmax=np.max(feature_landscape),
+            ax=ax[1, i]
+        )
+
+    # regression target
+    regression_landscape = get_landscape_value(X, Y, target_means, target_covs)
+    ax[0, -2].imshow(regression_landscape, cmap=cmap_targets, aspect="auto", extent=xlim + ylim, alpha=1)
+    ax[0, -2].set_title("regression\ntarget")
+    ax[0, -2].set_xlabel("x")
+
+    nx.draw(
+        graph, pos_for_plotting,
+        node_color=get_node_values(graph, pos, target_means, target_covs),
+        cmap=cmap_targets,
+        vmin=np.min(regression_landscape),
+        vmax=np.max(regression_landscape),
+        ax=ax[1, -2]
+    )
+
+    # classification target
+    classification_landscape = np.zeros_like(regression_landscape)
+
+    mean_regression_landscape = np.mean(regression_landscape)  # subtract the mean and threshold
+    class_mask = regression_landscape <= mean_regression_landscape
+
+    classification_landscape[class_mask] = 0
+    classification_landscape[~class_mask] = 1
+
+    ax[0, -1].imshow(classification_landscape, aspect="auto", cmap=cmap_targets, extent=xlim + ylim, alpha=1)
+    ax[0, -1].set_title("classification\ntarget")
+    ax[0, -1].set_xlabel("x")
+
+    node_values = get_node_values(graph, pos, target_means, target_covs)
+    node_class_mask = node_values <= mean_regression_landscape
+
+    node_values[node_class_mask] = 0
+    node_values[~node_class_mask] = 1
+
+    nx.draw(
+        graph, pos_for_plotting,
+        node_color=node_values,
+        cmap=cmap_targets,
+        vmin=np.min(classification_landscape),
+        vmax=np.max(classification_landscape),
+        ax=ax[1, -1])
+
+    plt.tight_layout()
+
+
 @hydra.main(version_base=None, config_path="configs", config_name="default")
 def main(cfg):
     np.random.seed(cfg.random_seed.numpy)
@@ -117,10 +202,10 @@ def main(cfg):
     resolution = cfg.plotting.resolution
     xlim = cfg.plotting.xlim
     ylim = cfg.plotting.ylim
+    num_features = cfg.dataset.features
 
     # random geometric graph
     graph, pos = generate_graph(cfg.topology.nodes, cfg.topology.radius, cfg.topology.threshold, cfg.random_seed.networkx)
-    pos_for_plotting = flip_y_axis(pos)  # nx.draw flips the y-axis, so we have to flip it back
 
     # meshgrid for all future plots
     X, Y = np.meshgrid(np.linspace(xlim[0], xlim[1], resolution),
@@ -137,60 +222,25 @@ def main(cfg):
     ax.set_ylabel("y")
     ax.set_zlabel("z")
 
-    # plot features, targets and graphs
-    fig, ax = plt.subplots(2, cfg.dataset.features + 2, sharey="row")
-    fig.suptitle("Features and targets")
+    feature_means = []
+    feature_covs = []
 
-    ax[0, 0].set_ylabel("y")  # align y axis
-    ax[0, 0].set_ylim(ylim)
+    for i in range(num_features):
+        means, covs = generate_statistics(cfg.gaussians)
+        feature_means.append(means)
+        feature_covs.append(covs)
 
-    # features
-    for i in range(cfg.dataset.features):
-        # feature maps
-        Z, means, covs = generate_landscape(X, Y, cfg.gaussians)
-        ax[0, i].imshow(Z, cmap=cm.viridis, aspect="auto", extent=xlim + ylim, alpha=1)
-        ax[0, i].set_title("# {:d}".format(i))
-        ax[0, i].set_xlabel("x")
+    target_means, target_covs = generate_statistics(cfg.gaussians)
 
-        # graph with feature map values
-        nx.draw(graph, pos_for_plotting, node_color=get_node_values(graph, pos, means, covs), cmap=cm.viridis, vmin=np.min(Z), vmax=np.max(Z), ax=ax[1, i])
+    feature_target_plot(graph, pos,
+                        feature_means, feature_covs,
+                        target_means, target_covs,
+                        cmap_features=cm.viridis, cmap_targets=cm.coolwarm,
+                        resolution=resolution,
+                        xlim=xlim, ylim=ylim)
 
-    # regression target
-    Z_regression_target, means, covs = generate_landscape(X, Y, cfg.gaussians)
-
-    ax[0, cfg.dataset.features].imshow(Z_regression_target, cmap=cm.coolwarm, aspect="auto", extent=xlim + ylim, alpha=1)
-    ax[0, cfg.dataset.features].set_title("regression\ntarget")
-    ax[0, cfg.dataset.features].set_xlabel("x")
-    nx.draw(graph, pos_for_plotting, node_color=get_node_values(graph, pos, means, covs), cmap=cm.coolwarm, vmin=np.min(Z_regression_target), vmax=np.max(Z_regression_target),
-            ax=ax[1, cfg.dataset.features])
-
-    # classification target
-    Z_classification_target, means, covs = generate_landscape(X, Y, cfg.gaussians)
-
-    # TODO possibly do multiple class scenario
-
-    mean_Z = np.mean(Z_classification_target)  # subtract the mean and threshold
-    Z_classification_target -= mean_Z
-    Z_classification_target[Z_classification_target <= 0] = 0
-    Z_classification_target[Z_classification_target > 0] = 1
-
-    ax[0, cfg.dataset.features + 1].imshow(Z_classification_target, aspect="auto", cmap=cm.coolwarm, extent=xlim + ylim, alpha=1)
-    ax[0, cfg.dataset.features + 1].set_title("classification\ntarget")
-    ax[0, cfg.dataset.features + 1].set_xlabel("x")
-
-    node_values = get_node_values(graph, pos, means, covs)
-    node_values -= mean_Z
-    node_values[node_values <= 0] = 0
-    node_values[node_values > 0] = 1
-
-    nx.draw(graph, pos_for_plotting, node_color=node_values, cmap=cm.coolwarm, vmin=np.min(Z_classification_target), vmax=np.max(Z_classification_target),
-            ax=ax[1, cfg.dataset.features + 1])
-
-    plt.tight_layout()
     plt.show()
 
 
 if __name__ == '__main__':
     main()
-
-    # TODO generate a dataset by multiplying the node vars with [0.9, 1.1] or similar
