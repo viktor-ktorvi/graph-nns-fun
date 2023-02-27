@@ -2,10 +2,9 @@ random_seed:
   numpy: 12345
   networkx: 896803
 
-features: 3
-
 # specify default configurations for each of the subfolders
 defaults:
+  - dataset: default
   - gaussians: low_frequency
   - plotting: default
   - topology: geometric_graph

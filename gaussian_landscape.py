@@ -138,14 +138,14 @@ def main(cfg):
     ax.set_zlabel("z")
 
     # plot features, targets and graphs
-    fig, ax = plt.subplots(2, cfg.features + 2, sharey="row")
+    fig, ax = plt.subplots(2, cfg.dataset.features + 2, sharey="row")
     fig.suptitle("Features and targets")
 
     ax[0, 0].set_ylabel("y")  # align y axis
     ax[0, 0].set_ylim(ylim)
 
     # features
-    for i in range(cfg.features):
+    for i in range(cfg.dataset.features):
         # feature maps
         Z, means, covs = generate_landscape(X, Y, cfg.gaussians)
         ax[0, i].imshow(Z, cmap=cm.viridis, aspect="auto", extent=xlim + ylim, alpha=1)
@@ -158,11 +158,11 @@ def main(cfg):
     # regression target
     Z_regression_target, means, covs = generate_landscape(X, Y, cfg.gaussians)
 
-    ax[0, cfg.features].imshow(Z_regression_target, cmap=cm.coolwarm, aspect="auto", extent=xlim + ylim, alpha=1)
-    ax[0, cfg.features].set_title("regression\ntarget")
-    ax[0, cfg.features].set_xlabel("x")
+    ax[0, cfg.dataset.features].imshow(Z_regression_target, cmap=cm.coolwarm, aspect="auto", extent=xlim + ylim, alpha=1)
+    ax[0, cfg.dataset.features].set_title("regression\ntarget")
+    ax[0, cfg.dataset.features].set_xlabel("x")
     nx.draw(graph, pos_for_plotting, node_color=get_node_values(graph, pos, means, covs), cmap=cm.coolwarm, vmin=np.min(Z_regression_target), vmax=np.max(Z_regression_target),
-            ax=ax[1, cfg.features])
+            ax=ax[1, cfg.dataset.features])
 
     # classification target
     Z_classification_target, means, covs = generate_landscape(X, Y, cfg.gaussians)
@@ -174,9 +174,9 @@ def main(cfg):
     Z_classification_target[Z_classification_target <= 0] = 0
     Z_classification_target[Z_classification_target > 0] = 1
 
-    ax[0, cfg.features + 1].imshow(Z_classification_target, aspect="auto", cmap=cm.coolwarm, extent=xlim + ylim, alpha=1)
-    ax[0, cfg.features + 1].set_title("classification\ntarget")
-    ax[0, cfg.features + 1].set_xlabel("x")
+    ax[0, cfg.dataset.features + 1].imshow(Z_classification_target, aspect="auto", cmap=cm.coolwarm, extent=xlim + ylim, alpha=1)
+    ax[0, cfg.dataset.features + 1].set_title("classification\ntarget")
+    ax[0, cfg.dataset.features + 1].set_xlabel("x")
 
     node_values = get_node_values(graph, pos, means, covs)
     node_values -= mean_Z
@@ -184,7 +184,7 @@ def main(cfg):
     node_values[node_values > 0] = 1
 
     nx.draw(graph, pos_for_plotting, node_color=node_values, cmap=cm.coolwarm, vmin=np.min(Z_classification_target), vmax=np.max(Z_classification_target),
-            ax=ax[1, cfg.features + 1])
+            ax=ax[1, cfg.dataset.features + 1])
 
     plt.tight_layout()
     plt.show()
