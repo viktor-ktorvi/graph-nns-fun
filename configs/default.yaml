@@ -1,6 +1,7 @@
 random_seed:
   numpy: 12345
   networkx: 896803
+  torch: 12345
 
 # specify default configurations for each of the subfolders
 defaults:
