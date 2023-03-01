@@ -16,7 +16,7 @@ def datasets_and_transform(cfg):
 
     dataset = GaussianLandscapeDataset(cfg)
 
-    train_dataset, validation_dataset = dataset.get_split([0.8, 0.2])
+    train_dataset, validation_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
 
     transform = Normalize(*get_mean_and_std(train_dataset))
 

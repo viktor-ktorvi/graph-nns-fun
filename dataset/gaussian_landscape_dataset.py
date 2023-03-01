@@ -128,14 +128,6 @@ class GaussianLandscapeDataset(InMemoryDataset):
 
         return self.data[idx]
 
-    def get_split(self, ratios):
-        """
-        Split dataset.
-        :param ratios: list of ratios of subsets
-        :return: tuple of subsets
-        """
-        return torch.utils.data.random_split(self, ratios)
-
     def generate_data(self, num, low=0.9, high=1.1):
         """
         Generate the samples by multiplying the features and targets with noise.
