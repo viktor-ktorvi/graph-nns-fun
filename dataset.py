@@ -16,11 +16,11 @@ from gaussian_landscape import feature_target_plot, flip_y_axis, get_landscape_v
 
 
 class GaussianLandscapeDataset(InMemoryDataset):
-
+    # TODO how does the saving to disc with/without transforms work?
     def __init__(self, cfg, root="", transform=None):
         super(GaussianLandscapeDataset, self).__init__(root, transform)
 
-        self.data_samples = []
+        self.data = []
         self.graph, self.pos_dict = generate_graph(cfg.topology.nodes, cfg.topology.radius, cfg.topology.threshold, cfg.random_seed.networkx)
 
         self.feature_means = []
@@ -56,10 +56,10 @@ class GaussianLandscapeDataset(InMemoryDataset):
 
     def classification_transform(self):
         y_mean = self.data_basis.y.mean()
-        for i in tqdm(range(len(self.data_samples)), ascii=True, desc="Creating classification targets"):
-            class_mask = self.data_samples[i].y <= y_mean
-            self.data_samples[i].y[class_mask] = 0
-            self.data_samples[i].y[~class_mask] = 1
+        for i in tqdm(range(len(self.data)), ascii=True, desc="Creating classification targets"):
+            class_mask = self.data[i].y <= y_mean
+            self.data[i].y[class_mask] = 0
+            self.data[i].y[~class_mask] = 1
 
     def download(self):
         pass
@@ -126,7 +126,15 @@ class GaussianLandscapeDataset(InMemoryDataset):
     def get(self, idx: int) -> Data:
         assert idx < self.len(), "Index(={:d}) is higher then the length of the dataset(={:d})".format(idx, self.len())
 
-        return self.data_samples[idx]
+        return self.data[idx]
+
+    def get_split(self, ratios):
+        """
+        Split dataset.
+        :param ratios: list of ratios of subsets
+        :return: tuple of subsets
+        """
+        return torch.utils.data.random_split(self, ratios)
 
     def generate_data(self, num, low=0.9, high=1.1):
         """
@@ -141,10 +149,10 @@ class GaussianLandscapeDataset(InMemoryDataset):
             sample.x *= torch.FloatTensor(*sample.x.shape).uniform_(low, high)
             sample.y *= torch.FloatTensor(*sample.y.shape).uniform_(low, high)
 
-            self.data_samples.append(sample)
+            self.data.append(sample)
 
     def len(self) -> int:
-        return len(self.data_samples)
+        return len(self.data)
 
     def process(self):
         pass
