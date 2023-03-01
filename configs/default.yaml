@@ -3,6 +3,8 @@ random_seed:
   networkx: 896803
   torch: 12345
 
+batch_size: 64
+
 # specify default configurations for each of the subfolders
 defaults:
   - dataset: default
