@@ -195,7 +195,7 @@ def feature_target_plot(
     plt.tight_layout()
 
 
-@hydra.main(version_base=None, config_path="configs", config_name="default")
+@hydra.main(version_base=None, config_path="../configs", config_name="default")
 def main(cfg):
     np.random.seed(cfg.random_seed.numpy)
 

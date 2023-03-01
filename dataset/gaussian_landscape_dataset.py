@@ -12,7 +12,7 @@ from typing import Union, List, Tuple
 from matplotlib import cm
 from matplotlib import pyplot as plt
 
-from gaussian_landscape import feature_target_plot, flip_y_axis, get_landscape_value, get_node_values, generate_graph, generate_statistics
+from gaussian_landscape.gaussian_landscape import feature_target_plot, flip_y_axis, get_landscape_value, get_node_values, generate_graph, generate_statistics
 
 
 class GaussianLandscapeDataset(InMemoryDataset):
@@ -166,7 +166,7 @@ class GaussianLandscapeDataset(InMemoryDataset):
         return ""
 
 
-@hydra.main(version_base=None, config_path="configs", config_name="default")
+@hydra.main(version_base=None, config_path="../configs", config_name="default")
 def main(cfg):
     np.random.seed(cfg.random_seed.numpy)
     torch.random.manual_seed(cfg.random_seed.torch)
