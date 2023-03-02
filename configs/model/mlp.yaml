@@ -1,0 +1,5 @@
+name: mlp
+type: mlp
+
+hidden_layers: 2
+hidden_size: 200

@@ -3,10 +3,11 @@ import torch
 
 import numpy as np
 
-from torch_geometric.loader import DataLoader
 from torch_geometric.transforms import AddSelfLoops, Compose, ToUndirected
 
 from dataset.gaussian_landscape_dataset import GaussianLandscapeDataset
+from model.utils import load_model
+from train.mlp import train_mlp
 from transforms.normalize import Normalize
 from transforms.utils import get_mean_and_std
 
@@ -31,19 +32,17 @@ def main(cfg):
     train_dataset = normalize(train_dataset)
     validation_dataset = normalize(validation_dataset)
 
-    train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
-    validation_loader = DataLoader(validation_dataset, batch_size=cfg.batch_size, shuffle=True)
+    model = load_model(cfg)
+    model.to(cfg.training.device)
+    model.train()
 
-    # TODO model; optimizer
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.training.learning_rate)
+    criterion = torch.nn.CrossEntropyLoss() if cfg.dataset.task == "classification" else torch.nn.MSELoss()
 
-    # TODO for epoch loop
-    #  for train batch loop
-    #    zero grad; forward; loss; accumulate metrics;backward; step;
-    #  train log
-    #  for validation batch loop
-    #    forward; loss; accumulate metrics
-    #  validation log
-    # TODO save model
+    if cfg.model.type == "mlp":
+        train_mlp(model, optimizer, criterion, train_dataset, validation_dataset, cfg)
+    else:
+        raise NotImplemented
 
     debug_var = None
 

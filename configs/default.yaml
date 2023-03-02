@@ -3,12 +3,12 @@ random_seed:
   networkx: 896803
   torch: 12345
 
-batch_size: 64
-
 # specify default configurations for each of the subfolders
 defaults:
   - dataset: default
   - gaussians: low_frequency
+  - model: mlp
   - plotting: default
   - topology: geometric_graph
+  - training: default
   - _self_ # https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order/
