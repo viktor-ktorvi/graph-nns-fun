@@ -9,4 +9,4 @@ def get_mean_and_std(dataset):
     scaler = StandardScaler()
     scaler.fit(x.cpu().numpy())
 
-    return torch.tensor(scaler.mean_), torch.tensor(scaler.scale_)
+    return torch.tensor(scaler.mean_, dtype=torch.float32), torch.tensor(scaler.scale_, dtype=torch.float32)
