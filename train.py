@@ -7,6 +7,7 @@ from torch_geometric.transforms import AddSelfLoops, Compose, ToUndirected
 
 from dataset.gaussian_landscape_dataset import GaussianLandscapeDataset
 from model.utils import load_model
+from train.gnn import train_gnn
 from train.mlp import train_mlp
 from transforms.normalize import Normalize
 from transforms.utils import get_mean_and_std
@@ -36,11 +37,13 @@ def main(cfg):
     model.to(cfg.training.device)
     model.train()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.training.learning_rate)
-    criterion = torch.nn.CrossEntropyLoss() if cfg.dataset.task == "classification" else torch.nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.model.learning_rate)
+    criterion = torch.nn.BCEWithLogitsLoss(reduction="sum") if cfg.dataset.task == "classification" else torch.nn.MSELoss(reduction="sum")
 
     if cfg.model.type == "mlp":
         train_mlp(model, optimizer, criterion, train_dataset, validation_dataset, cfg)
+    elif cfg.model.type == "gnn":
+        train_gnn(model, optimizer, criterion, train_dataset, validation_dataset, cfg)
     else:
         raise NotImplemented
 

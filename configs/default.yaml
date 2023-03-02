@@ -7,7 +7,7 @@ random_seed:
 defaults:
   - dataset: default
   - gaussians: low_frequency
-  - model: mlp
+  - model: gcn
   - plotting: default
   - topology: geometric_graph
   - training: default

@@ -1,2 +1,10 @@
 name: gcn
 type: gnn
+
+batch_size: 512
+epochs: 500
+
+hidden_layers: 3
+hidden_size: 50
+
+learning_rate: 3.0e-3

@@ -1,10 +1,10 @@
 features: 3
 
 multiplicative_noise:
-  low: 0.9
-  high: 1.1
+  low: 0.3
+  high: 1.7
 
-task: classification
+task: regression
 
 size: 1007
 

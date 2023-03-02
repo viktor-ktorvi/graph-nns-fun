@@ -9,10 +9,10 @@ def train_mlp(model, optimizer, criterion, train_dataset, validation_dataset, cf
     train_dataset = to_tensor_dataset(train_dataset)
     validation_dataset = to_tensor_dataset(validation_dataset)
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.training.batch_size, shuffle=True)
-    validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=cfg.training.batch_size, shuffle=True)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.model.batch_size, shuffle=True)
+    validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=cfg.model.batch_size, shuffle=True)
 
-    progress_bar = tqdm(range(cfg.training.epochs))
+    progress_bar = tqdm(range(cfg.model.epochs))
 
     for epoch in progress_bar:
         cumulative_loss_train = 0
@@ -23,11 +23,12 @@ def train_mlp(model, optimizer, criterion, train_dataset, validation_dataset, cf
             y = batch[1].to(cfg.training.device)
 
             optimizer.zero_grad()
-            prediction = model(x)
-            loss = criterion(prediction, y)
+            output = model(x)
+            loss = criterion(output, y.float())
 
             cumulative_loss_train += loss.item()
-            accuracy_count_train += (torch.round(prediction) == y).sum().item()
+            prediction = output > 0
+            accuracy_count_train += (prediction == y).sum().item()
 
             loss.backward()
             optimizer.step()
@@ -40,10 +41,11 @@ def train_mlp(model, optimizer, criterion, train_dataset, validation_dataset, cf
                 x = batch[0].to(cfg.training.device)
                 y = batch[1].to(cfg.training.device)
 
-                prediction = model(x)
-                loss = criterion(prediction, y)
+                output = model(x)
+                loss = criterion(output, y.float())
                 cumulative_loss_val += loss.item()
-                accuracy_count_val += (torch.round(prediction) == y).sum().item()
+                prediction = output > 0
+                accuracy_count_val += (prediction == y).sum().item()
 
         if epoch % 1 == 0:
             progress_bar.set_description("MLP training: training loss = {:2.5f}; validation loss = {:2.5f}; train accuracy = {:2.2f}; validation accuracy = {:2.2f}".format(

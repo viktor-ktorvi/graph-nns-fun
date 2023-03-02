@@ -1,4 +1,1 @@
-batch_size: 64
 device: "cuda:0"
-epochs: 200
-learning_rate: 3.0e-4
