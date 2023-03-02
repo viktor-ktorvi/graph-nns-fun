@@ -1,7 +1,7 @@
 name: gcn
 type: gnn
 
-batch_size: 512
+batch_size: 128
 epochs: 500
 
 hidden_layers: 3

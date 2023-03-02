@@ -1,7 +1,7 @@
 name: mlp
 type: mlp
 
-batch_size: 512
+batch_size: 128
 dropout: 0.5
 epochs: 500
 
