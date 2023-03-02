@@ -34,15 +34,18 @@ class GaussianLandscapeDataset(InMemoryDataset):
             x.append(get_node_values(self.graph, self.pos_dict, feature_means, feature_covs))
 
         self.target_means, self.target_covs = generate_statistics(cfg.gaussians)
-        y = torch.tensor(get_node_values(self.graph, self.pos_dict, self.target_means, self.target_covs))
+        y = torch.tensor(get_node_values(self.graph, self.pos_dict, self.target_means, self.target_covs), dtype=torch.float32)
 
         self.data_basis = Data(
-            x=torch.tensor(np.array(x)).T,
+            x=torch.tensor(np.array(x), dtype=torch.float32).T,
             y=y,
             edge_index=torch.tensor(list(self.graph.edges)).T,
             pos=torch.tensor([self.pos_dict[node] for node in self.graph]))
 
-        self.generate_data(cfg.dataset.size)
+        self.generate_data(
+            cfg.dataset.size,
+            low=cfg.dataset.multiplicative_noise.low,
+            high=cfg.dataset.multiplicative_noise.high)
 
         self.task = cfg.dataset.task
         if cfg.dataset.task == "classification":
@@ -127,6 +130,12 @@ class GaussianLandscapeDataset(InMemoryDataset):
         assert idx < self.len(), "Index(={:d}) is higher then the length of the dataset(={:d})".format(idx, self.len())
 
         return self.data[idx]
+
+    def get_tensor_dataset(self):
+        in_tensor = torch.vstack([sample.x.flatten()[None, :] for sample in self.data])
+        target_tensor = torch.vstack([sample.y[None, :] for sample in self.data])
+
+        return torch.utils.data.TensorDataset(in_tensor, target_tensor)
 
     def generate_data(self, num, low=0.9, high=1.1):
         """

@@ -1,5 +1,9 @@
 features: 3
 
+multiplicative_noise:
+  low: 0.9
+  high: 1.1
+
 task: classification
 
 size: 1007
