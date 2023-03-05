@@ -18,8 +18,8 @@ We create a few gaussian landscape feature maps, generate a random graph and pro
 This should give us a good basis for creating a synthetic graph dataset that's easy to visualize.
 
 ## TODOs
-- [ ] Create a datasets by multiplying feature maps with noise $v \\sim U (0.9, 1.1)$
-- [ ] train an MLP
+- [x] Create a datasets by multiplying feature maps with noise $v \\sim U (0.9, 1.1)$
+- [x] train an MLP
 - [ ] train a few GNNs
 - [ ] compare
 - [ ] use wandb sweeps
